@@ -1,3 +1,4 @@
+import { useFormData } from '../context/FormDataContext';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { FormErrorMessage, FormControl, Textarea, Heading, Button, VStack, Select } from '@chakra-ui/react'
@@ -9,9 +10,11 @@ type FormData = {
 
 export default function Home() {
   const { handleSubmit, register, formState: { errors, isSubmitting }, } = useForm();
+  const { setFormData } = useFormData();
   const router = useRouter();
   
   async function onSubmit(values: FormData) {
+    setFormData(values);
     router.push({
       pathname: '/result',
     });
