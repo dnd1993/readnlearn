@@ -1,16 +1,21 @@
-import { Form, useForm } from 'react-hook-form';
-import { FormErrorMessage, FormLabel, FormControl, Textarea, Heading, Button, VStack, Select } from '@chakra-ui/react'
+import { useRouter } from 'next/router';
+import { useForm } from 'react-hook-form';
+import { FormErrorMessage, FormControl, Textarea, Heading, Button, VStack, Select } from '@chakra-ui/react'
+
+type FormData = {
+  language: string;
+  text: string;
+}
 
 export default function Home() {
   const { handleSubmit, register, formState: { errors, isSubmitting }, } = useForm();
-  function onSubmit(values) {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        alert(JSON.stringify(values, null, 2))
-        resolve()
-      }, 3000)
-    })
-  }
+  const router = useRouter();
+  
+  async function onSubmit(values: FormData) {
+    router.push({
+      pathname: '/result',
+    });
+  };
   return (
     <VStack spacing={4}>
       <Heading as='h1' size='4xl' noOfLines={1}>
@@ -24,9 +29,9 @@ export default function Home() {
               placeholder='Select Language of Text to Paste'
               {...register('language', { required: true })}
             >
-              <option value='option1'>French</option>
-              <option value='option2'>Spanish</option>
-              <option value='option3'>Russian</option>
+              <option value='french'>French</option>
+              <option value='spanish'>Spanish</option>
+              <option value='russian'>Russian</option>
             </Select>
               {errors.language && <FormErrorMessage>Please select the language.</FormErrorMessage>}
             </FormControl>
