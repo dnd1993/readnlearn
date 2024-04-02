@@ -9,16 +9,16 @@ export default function Result() {
     const [selectedWordIndex, setSelectedWordIndex] = useState(null);
 
     // Use a regex that captures words, spaces, and punctuation as separate groups
-    const elements = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
+    const words = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
 
-    const handleWordClick = (index) => setSelectedWordIndex(index);
+    const handleWordClick = (index: number) => setSelectedWordIndex(index);
 
     return (
         <VStack spacing={4} mt="20px">
             <Button colorScheme="blue" onClick={() => router.push('/')}>Back to Home</Button>
             <Box p={5} textAlign="justify" whiteSpace="pre-wrap">
-                {elements.map((element, index) => {
-                    const isWord = /\w+/.test(element);
+                {words.map((word: string, index: number) => {
+                    const isWord = /\w+/.test(word);
                     return (
                         <React.Fragment key={index}>
                             {isWord ? (
@@ -30,12 +30,12 @@ export default function Result() {
                                 >
                                     <PopoverTrigger>
                                         <Text as="span" cursor="pointer" _hover={{ textDecoration: "underline" }} onClick={() => handleWordClick(index)}>
-                                            {element}
+                                            {word}
                                         </Text>
                                     </PopoverTrigger>
                                     <PopoverContent>
                                         <PopoverBody>
-                                            This is placeholder content for "{element}".
+                                            This is placeholder content for "{word}".
                                         </PopoverBody>
                                         <PopoverFooter>
                                             <Button>Add To Vocabulary</Button>
@@ -44,7 +44,7 @@ export default function Result() {
                                 </Popover>
                             ) : (
                                 // Directly render spaces and punctuation without wrapping them in Popover
-                                <Text as="span" display="inline">{element}</Text>
+                                <Text as="span" display="inline">{word}</Text>
                             )}
                         </React.Fragment>
                     );
