@@ -1,55 +1,52 @@
-import { useRef } from "react";
-import { Text, Box, Button, VStack, Popover, PopoverTrigger, PopoverContent, PopoverHeader, PopoverArrow, PopoverCloseButton, PopoverBody, PopoverFooter, ButtonGroup } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
 import { useRouter } from 'next/router';
 
 export default function Result() {
     const router = useRouter();
-    const initialFocusRef = useRef();
     const { formData } = useFormData();
+    const [selectedWordIndex, setSelectedWordIndex] = useState(null);
 
-    // This regex splits the text into words and punctuation, preserving both
-    const words = formData.text.split(/(\s+|\b)/);
+    // Use a regex that captures words, spaces, and punctuation as separate groups
+    const elements = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
 
-    // Function to handle word clicks
-    const handleWordClick = (word) => {
-        console.log(`You clicked on: ${word}`);
-    }
+    const handleWordClick = (index) => setSelectedWordIndex(index);
 
     return (
-        <VStack spacing={4} mt='20px'>
-            <Button colorScheme="blue" onClick={() => router.push('/')}>
-                Back to Home
-            </Button>
+        <VStack spacing={4} mt="20px">
+            <Button colorScheme="blue" onClick={() => router.push('/')}>Back to Home</Button>
             <Box p={5} textAlign="justify" whiteSpace="pre-wrap">
-                {words.map((word, index) => {
-                    // Check if the word is actually a word and not just spaces or punctuation
-                    if (!word.trim().length || word.match(/^\s+$/)) {
-                        // It's a space or punctuation, render without popover
-                        return <Text as="span" key={index} marginRight="1px">{word}</Text>;
-                    }
-                    // It's an actual word, render with popover
+                {elements.map((element, index) => {
+                    const isWord = /\w+/.test(element);
                     return (
-                        <Popover key={index} initialFocusRef={initialFocusRef} placement='bottom' closeOnBlur={true}>
-                            <PopoverTrigger>
-                                <Text as="span" cursor="pointer" _hover={{ textDecoration: "underline" }} onClick={() => handleWordClick(word)} marginRight="1px">
-                                    {word}
-                                </Text>
-                            </PopoverTrigger>
-                            <PopoverContent color='white' bg='blue.800' borderColor='blue.800'>
-                                <PopoverHeader pt={4} fontWeight='bold' border='0'>
-                                    Translation
-                                </PopoverHeader>
-                                <PopoverArrow bg='blue.800' />
-                                <PopoverCloseButton />
-                                <PopoverBody>
-                                    This is where stuff from Google Translate API will come.
-                                </PopoverBody>
-                                <PopoverFooter border='0' display='flex' alignItems='center' justifyContent='space-between' pb={4}>
-                                    <Button colorScheme='blue'>Add to Vocabulary</Button>
-                                </PopoverFooter>
-                            </PopoverContent>
-                        </Popover>
+                        <React.Fragment key={index}>
+                            {isWord ? (
+                                <Popover
+                                    isOpen={selectedWordIndex === index}
+                                    onClose={() => setSelectedWordIndex(null)}
+                                    placement="bottom"
+                                    closeOnBlur={true}
+                                >
+                                    <PopoverTrigger>
+                                        <Text as="span" cursor="pointer" _hover={{ textDecoration: "underline" }} onClick={() => handleWordClick(index)}>
+                                            {element}
+                                        </Text>
+                                    </PopoverTrigger>
+                                    <PopoverContent>
+                                        <PopoverBody>
+                                            This is placeholder content for "{element}".
+                                        </PopoverBody>
+                                        <PopoverFooter>
+                                            <Button>Add To Vocabulary</Button>
+                                        </PopoverFooter>
+                                    </PopoverContent>
+                                </Popover>
+                            ) : (
+                                // Directly render spaces and punctuation without wrapping them in Popover
+                                <Text as="span" display="inline">{element}</Text>
+                            )}
+                        </React.Fragment>
                     );
                 })}
             </Box>
