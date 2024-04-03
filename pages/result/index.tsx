@@ -1,17 +1,29 @@
 import React, { useState } from "react";
 import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
+import { useTranslate } from "../../hooks/useTranslate";
 import { useRouter } from 'next/router';
 
 export default function Result() {
     const router = useRouter();
     const { formData } = useFormData();
+
     const [selectedWordIndex, setSelectedWordIndex] = useState(null);
+    const [selectedWord, setSelectedWord] = useState("");
 
     // Use a regex that captures words, spaces, and punctuation as separate groups
     const words = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
 
-    const handleWordClick = (index: number) => setSelectedWordIndex(index);
+    const handleWordClick = (word: string, index: number) => {
+        setSelectedWordIndex(index);
+        setSelectedWord(word);
+    }
+
+    const { data: translation, isLoading } = useTranslate({
+        query: selectedWord,
+        sourceLang: 'fr',
+        targetLang: 'en',
+    });
 
     return (
         <VStack spacing={4} mt="20px">
@@ -29,13 +41,13 @@ export default function Result() {
                                     closeOnBlur={true}
                                 >
                                     <PopoverTrigger>
-                                        <Text as="span" cursor="pointer" _hover={{ textDecoration: "underline" }} onClick={() => handleWordClick(index)}>
+                                        <Text as="span" cursor="pointer" _hover={{ textDecoration: "underline" }} onClick={() => handleWordClick(word, index)}>
                                             {word}
                                         </Text>
                                     </PopoverTrigger>
                                     <PopoverContent>
                                         <PopoverBody>
-                                            This is placeholder content for "{word}".
+                                        {isLoading ? "Loading translation..." : translation?.data.translations[0].translatedText || "Translation not available."}
                                         </PopoverBody>
                                         <PopoverFooter>
                                             <Button>Add To Vocabulary</Button>

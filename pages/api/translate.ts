@@ -4,11 +4,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
        const { text, targetLang, sourceLang = 'en' } = req.body;
        
-       const response = await fetch('https://translation.googleapis.com/language/translate/v2', {
+       const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${process.env.GOOGLE_TRANSLATE_API_KEY}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.GOOGLE_TRANSLATE_API_KEY}`,
             },
             body:JSON.stringify({
                 q: text,
