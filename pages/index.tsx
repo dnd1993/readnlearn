@@ -34,7 +34,7 @@ export default function Home() {
             >
               <option value='french'>French</option>
               <option value='spanish'>Spanish</option>
-              <option value='russian'>Russian</option>
+              <option value='german'>German</option>
             </Select>
               {errors.language && <FormErrorMessage>Please select the language.</FormErrorMessage>}
             </FormControl>

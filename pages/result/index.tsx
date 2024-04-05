@@ -3,6 +3,7 @@ import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text
 import { useFormData } from "../../context/FormDataContext";
 import { useTranslate } from "../../hooks/useTranslate";
 import { useRouter } from 'next/router';
+import { languageMap } from "../../utils/translation";
 
 export default function Result() {
     const router = useRouter();
@@ -21,7 +22,7 @@ export default function Result() {
 
     const { data: translation, isLoading } = useTranslate({
         query: selectedWord,
-        sourceLang: 'fr',
+        sourceLang: languageMap[formData.language],
         targetLang: 'en',
     });
 
