@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
 const fetchTranslation = async ({ queryKey }) => {
-    console.log('Fetching translation for key:', queryKey);
     const [_key, { query, sourceLang, targetLang }] = queryKey;
     const response = await fetch('/api/translate', {
         method: 'POST',
