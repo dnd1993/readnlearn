@@ -12,10 +12,13 @@
     "@emotion/styled": "^11.11.0",
     "@tanstack/react-query": "^5.28.14",
     "firebase": "^10.10.0",
+    "firebaseui": "^6.1.0",
     "framer-motion": "^11.0.15",
     "next": "latest",
+    "next-auth": "^4.24.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.51.1"
   },
   "engines": {
