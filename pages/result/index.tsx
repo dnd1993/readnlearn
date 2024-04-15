@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../utils/firebase/config";
 import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
 import { useTranslate } from "../../hooks/useTranslate";
@@ -23,7 +25,7 @@ export default function Result() {
     // Use a regex that captures words, spaces, and punctuation as separate groups
     const words = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
 
-    const handleWordClick = (word: string, index: number) => {
+    const handleWordClick = async (word: string, index: number) => {
         setSelectedWordIndex(index);
         setSelectedWord(word);
     }
