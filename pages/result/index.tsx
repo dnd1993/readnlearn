@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../utils/firebase/config";
+import { addToVocabulary } from "../../utils/vocabulary/addToVocabulary";
 import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
 import { useTranslate } from "../../hooks/useTranslate";
 import { useRouter } from 'next/router';
-import { languageMap } from "../../utils/translation";
+import { languageMap } from "../../utils/vocabulary/translation";
 import NavBar from "../../components/NavBar";
 
 export default function Result() {
-    const { status } = useSession({
+    const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
             signIn('google');
@@ -35,6 +34,12 @@ export default function Result() {
         sourceLang: languageMap[formData.language],
         targetLang: 'en',
     });
+
+    const handleAddToVocabulary = async () => {
+        if (translation?.data.translations[0].translatedText) {
+            await addToVocabulary(session.user.id, languageMap[formData.language], selectedWord, translation.data.translations[0].translatedText);
+        }
+    }
 
     if (!formData.text) {
         return (
@@ -76,7 +81,7 @@ export default function Result() {
                                             {isLoading ? "Loading translation..." : translation?.data.translations[0].translatedText || "Translation not available."}
                                             </PopoverBody>
                                             <PopoverFooter>
-                                                <Button>Add To Vocabulary</Button>
+                                                <Button onClick={handleAddToVocabulary}>Add To Vocabulary</Button>
                                             </PopoverFooter>
                                         </PopoverContent>
                                     </Popover>
