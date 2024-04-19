@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading } from "@chakra-ui/react";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
@@ -66,6 +67,8 @@ const VocabularyTable = ({ words }) => {
                 <Tr>
                     <Th>Word</Th>
                     <Th>Translation</Th>
+                    {/* empty table header for a delete button */}
+                    <Th></Th>
                 </Tr>
             </Thead>
             <Tbody>
@@ -73,6 +76,15 @@ const VocabularyTable = ({ words }) => {
                     <Tr key={index}>
                         <Td>{entry.word}</Td>
                         <Td>{entry.translation}</Td>
+                        <Td textAlign='center'>
+                            <IconButton 
+                                aria-label="Delete word"
+                                icon={<DeleteIcon />}
+                                size='sm'
+                                colorScheme='red'
+                                variant='ghost'
+                            />
+                        </Td>
                     </Tr>
                 ))}
             </Tbody>
