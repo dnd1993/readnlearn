@@ -10,19 +10,17 @@ import { capitalizeFirstLetter } from "../../utils/vocabulary/capitalizeFirstLet
 const VocabularyPage = () => {
     const { data: session } = useSession();
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
-    const [vocabulary, setVocabulary] = useState({});
+    const [vocabulary, setVocabulary] = useState([]);
 
     useEffect(() => {
         session && (async function fetchDoc() {
             const docRef = doc(db, 'users', session.user.id);
             const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                console.log('Document data: ', docSnap.data());
-                console.log('Language: ', selectedLanguage);
+            if (docSnap.exists() && docSnap.data().vocabulary) {
                 setVocabulary(docSnap.data().vocabulary[selectedLanguage + 'Words'])
-                console.log('Vocabulary: ', vocabulary);
             } else {
                 console.log('No such document!');
+                setVocabulary([]); // Ensure vocabulary is set to an empty array if it doesn't exist
             }
         })();
     }, [session, selectedLanguage])
