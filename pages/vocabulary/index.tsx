@@ -4,7 +4,7 @@ import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td,
 import { DeleteIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { languageMap } from "../../utils/vocabulary/translation";
 import { capitalizeFirstLetter } from "../../utils/vocabulary/capitalizeFirstLetter";
 
@@ -12,6 +12,16 @@ const VocabularyPage = () => {
     const { data: session } = useSession();
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
     const [vocabulary, setVocabulary] = useState([]);
+
+    const handleDeleteWord = async (index: number) => {
+        const fieldPath = `vocabulary.${selectedLanguage}Words`;
+        const updatedVocabulary = vocabulary.filter((_, i) => i !== index);
+        const docRef = doc(db, 'users', session.user.id);
+        await updateDoc(docRef, {
+            [fieldPath]: updatedVocabulary
+        });
+        setVocabulary(updatedVocabulary)
+    };
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -49,14 +59,14 @@ const VocabularyPage = () => {
                     <Heading mb={4}>
                         {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
                     </Heading>
-                    <VocabularyTable words={vocabulary} />
+                    <VocabularyTable words={vocabulary} onDelete={handleDeleteWord} />
                 </Box> 
             </Flex>
         </>
     )
 }
 
-const VocabularyTable = ({ words }) => {
+const VocabularyTable = ({ words, onDelete }) => {
     if(!words || words.length === 0) {
         return <Box>No words added yet.</Box>
     }
@@ -83,6 +93,7 @@ const VocabularyTable = ({ words }) => {
                                 size='sm'
                                 colorScheme='red'
                                 variant='ghost'
+                                onClick={() => onDelete(index)}
                             />
                         </Td>
                     </Tr>
