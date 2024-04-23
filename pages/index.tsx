@@ -1,7 +1,4 @@
-// pages/index.tsx
-import { useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/router";
+import { signIn, getSession } from "next-auth/react";
 import {
   Box,
   Button,
@@ -13,28 +10,10 @@ import {
   Container,
   AspectRatio,
   useColorModeValue,
-  Divider,
 } from "@chakra-ui/react";
 import { FaGoogle } from 'react-icons/fa';
 
 export default function Home() {
-  const { status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/input');
-    }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return <Center height="100vh"><Text>Loading...</Text></Center>;
-  }
-
-  if (status === 'authenticated') {
-    return null;
-  }
-
   const sectionBgColor = useColorModeValue('gray.50', 'gray.900');
   const textColor = useColorModeValue('gray.700', 'gray.200');
 
@@ -88,4 +67,20 @@ export default function Home() {
       </Box>
     </Box>
   );
+}
+
+export async function getServerSideProps(context) {
+  // fetches the session directly in the server-side context, ensuring that the authentication state is known before the page is rendered
+  const session = await getSession(context);
+  if (session) {
+    return {
+      redirect: {
+        destination: '/input',
+        permanent: false,
+      },
+    };
+  }
+  return {
+    props: {},
+  };
 }

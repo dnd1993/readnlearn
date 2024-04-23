@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton } from "@chakra-ui/react";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
@@ -12,6 +12,18 @@ const VocabularyPage = () => {
     const { data: session } = useSession();
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
     const [vocabulary, setVocabulary] = useState([]);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [indexToDelete, setIndexToDelete] = useState(null);
+    const cancelRef = useRef(); // For the cancel button focus
+
+    const onOpenAlert = (index: number) => {
+        setIndexToDelete(index);
+        setIsAlertOpen(true);
+    }
+
+    const onCloseAlert = () => {
+        setIsAlertOpen(false);
+    }
 
     const handleDeleteWord = async (index: number) => {
         const fieldPath = `vocabulary.${selectedLanguage}Words`;
@@ -22,6 +34,11 @@ const VocabularyPage = () => {
         });
         setVocabulary(updatedVocabulary)
     };
+
+    const onDeleteConfirm = async (index: number) => {
+        await handleDeleteWord(index);
+        onCloseAlert();
+    }
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -59,9 +76,31 @@ const VocabularyPage = () => {
                     <Heading mb={4}>
                         {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
                     </Heading>
-                    <VocabularyTable words={vocabulary} onDelete={handleDeleteWord} />
+                    <VocabularyTable words={vocabulary} onDelete={onOpenAlert} />
                 </Box> 
             </Flex>
+            <AlertDialog
+                isOpen={isAlertOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onCloseAlert}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+                        Delete Word
+                    </AlertDialogHeader>
+                    <AlertDialogBody>
+                        Are you sure you want to delete this word?
+                    </AlertDialogBody>
+                    <AlertDialogFooter>
+                        <Button ref={cancelRef} onClick={onCloseAlert}>
+                            Cancel
+                        </Button>
+                        <Button colorScheme='red'>
+                            Delete
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     )
 }
@@ -82,7 +121,7 @@ const VocabularyTable = ({ words, onDelete }) => {
                 </Tr>
             </Thead>
             <Tbody>
-                {words.length > 0 && words.map((entry, index) => (
+                {words.length > 0 && words.map((entry, index: number) => (
                     <Tr key={index}>
                         <Td>{entry.word}</Td>
                         <Td>{entry.translation}</Td>

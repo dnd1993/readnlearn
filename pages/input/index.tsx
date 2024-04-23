@@ -10,7 +10,7 @@ type FormData = {
   text: string;
 }
 
-export default function Home() {
+export default function InputPage() {
   const { status } = useSession({
     required: true,
     onUnauthenticated() {

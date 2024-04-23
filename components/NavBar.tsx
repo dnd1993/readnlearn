@@ -14,7 +14,7 @@ const NavBar = () => {
     };
 
     // Function to determine if the link is the current page
-    const isActive = (pathname) => router.pathname === pathname;
+    const isActive = (pathname: string) => router.pathname === pathname;
 
     return (
         <Flex as="nav" align="center" justify="space-between" padding="1.5rem" bg="blue.500" color="white" marginBottom="20px">
