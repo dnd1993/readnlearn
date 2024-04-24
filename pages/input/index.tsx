@@ -1,4 +1,5 @@
-import { useSession, signIn } from 'next-auth/react';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { getSession } from 'next-auth/react';
 import { useFormData } from '../../context/FormDataContext';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
@@ -11,12 +12,6 @@ type FormData = {
 }
 
 export default function InputPage() {
-  const { status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      signIn('google');
-    }
-  })
   const { handleSubmit, register, formState: { errors, isSubmitting }, } = useForm();
   const { setFormData } = useFormData();
   const router = useRouter();
@@ -28,11 +23,6 @@ export default function InputPage() {
     });
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>
-  }
-
-  const bgColor = useColorModeValue('gray.100', 'gray.700');
   const formBgColor = useColorModeValue('white', 'gray.600');
 
   return (
@@ -87,4 +77,21 @@ export default function InputPage() {
       </Container>
     </>
   );
+}
+
+export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
+  const session = await getSession(context);
+
+  if(!session) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { session },
+  }
 }

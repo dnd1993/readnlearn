@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button } from "@chakra-ui/react";
+import { GetServerSideProps } from "next";
+import { getSession } from "next-auth/react";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
@@ -8,37 +9,12 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { languageMap } from "../../utils/vocabulary/translation";
 import { capitalizeFirstLetter } from "../../utils/vocabulary/capitalizeFirstLetter";
 
-const VocabularyPage = () => {
-    const { data: session } = useSession();
+const VocabularyPage = ({ session }) => {
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
     const [vocabulary, setVocabulary] = useState([]);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
     const cancelRef = useRef(); // For the cancel button focus
-
-    const onOpenAlert = (index: number) => {
-        setIndexToDelete(index);
-        setIsAlertOpen(true);
-    }
-
-    const onCloseAlert = () => {
-        setIsAlertOpen(false);
-    }
-
-    const handleDeleteWord = async (index: number) => {
-        const fieldPath = `vocabulary.${selectedLanguage}Words`;
-        const updatedVocabulary = vocabulary.filter((_, i) => i !== index);
-        const docRef = doc(db, 'users', session.user.id);
-        await updateDoc(docRef, {
-            [fieldPath]: updatedVocabulary
-        });
-        setVocabulary(updatedVocabulary)
-    };
-
-    const onDeleteConfirm = async (index: number) => {
-        await handleDeleteWord(index);
-        onCloseAlert();
-    }
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -52,6 +28,26 @@ const VocabularyPage = () => {
             }
         })();
     }, [session, selectedLanguage])
+
+    const onOpenAlert = (index: number) => {
+        setIndexToDelete(index);
+        setIsAlertOpen(true);
+    }
+
+    const onCloseAlert = () => {
+        setIsAlertOpen(false);
+    }
+
+    const onDeleteConfirm = async () => {
+        const fieldPath = `vocabulary.${selectedLanguage}Words`;
+        const updatedVocabulary = vocabulary.filter((_, i) => i !== indexToDelete);
+        const docRef = doc(db, 'users', session.user.id);
+        await updateDoc(docRef, {
+            [fieldPath]: updatedVocabulary
+        });
+        setVocabulary(updatedVocabulary);
+        onCloseAlert();
+    };
 
     return (
         <>
@@ -95,7 +91,7 @@ const VocabularyPage = () => {
                         <Button ref={cancelRef} onClick={onCloseAlert}>
                             Cancel
                         </Button>
-                        <Button colorScheme='red'>
+                        <Button colorScheme='red' onClick={onDeleteConfirm}>
                             Delete
                         </Button>
                     </AlertDialogFooter>
@@ -143,3 +139,25 @@ const VocabularyTable = ({ words, onDelete }) => {
 };
 
 export default VocabularyPage;
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    const session = await getSession(context);
+
+    if (!session) {
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            }
+        }
+    }
+
+    const docRef = doc(db, 'users', session.user.id);
+    const docSnap = await getDoc(docRef);
+
+    const vocabulary = docSnap.exists() && docSnap.data().vocabulary ? docSnap.data().vocabulary[Object.values(languageMap)[0] + 'Words'] : {};
+
+    return {
+        props: { session },
+    };
+};

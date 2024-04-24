@@ -21,7 +21,6 @@ const NavBar = () => {
             <HStack spacing={4}>
                 <Link href="/input" passHref>
                     <Text
-                      as="a"
                       fontSize="xl"
                       fontWeight="bold"
                       _hover={{ textDecoration: 'underline' }}
@@ -33,7 +32,6 @@ const NavBar = () => {
                 {session && (
                     <Link href="/vocabulary" passHref>
                         <Text
-                          as="a"
                           fontSize="xl"
                           fontWeight="bold"
                           _hover={{ textDecoration: 'underline' }}

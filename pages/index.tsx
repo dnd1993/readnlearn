@@ -2,15 +2,14 @@ import { signIn, getSession } from "next-auth/react";
 import {
   Box,
   Button,
-  Center,
   Heading,
-  Image,
   Stack,
   Text,
   Container,
   AspectRatio,
   useColorModeValue,
 } from "@chakra-ui/react";
+import Image from "next/image";
 import { FaGoogle } from 'react-icons/fa';
 
 export default function Home() {
@@ -32,13 +31,13 @@ export default function Home() {
               Sign In with Google
             </Button>
           </Box>
-          <Box flex="1">
+          <Box flex="1" position='relative'>
             <Image
               src="https://images.unsplash.com/photo-1584697964358-3e14ca57658b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Language Learning"
-              borderRadius="lg"
-              shadow="lg"
-              objectFit="cover"
+              width={500}
+              height={300}
+              layout='responsive'
             />
           </Box>
         </Stack>
