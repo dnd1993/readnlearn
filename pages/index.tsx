@@ -31,13 +31,14 @@ export default function Home() {
               Sign In with Google
             </Button>
           </Box>
-          <Box flex="1" position='relative'>
+          <Box flex="1" position='relative' minHeight='400px' w={{ base: '100%', md: '50%' }}>
             <Image
               src="https://images.unsplash.com/photo-1584697964358-3e14ca57658b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Language Learning"
-              width={500}
-              height={300}
-              layout='responsive'
+              fill
+              priority={true}
+              objectFit="cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 600px"
             />
           </Box>
         </Stack>
