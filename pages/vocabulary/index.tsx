@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button } from "@chakra-ui/react";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, useToast } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
@@ -15,6 +15,7 @@ const VocabularyPage = ({ session }) => {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
     const cancelRef = useRef(); // For the cancel button focus
+    const toast = useToast();
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -47,6 +48,12 @@ const VocabularyPage = ({ session }) => {
         });
         setVocabulary(updatedVocabulary);
         onCloseAlert();
+        toast({
+            description: `The word '${vocabulary[indexToDelete].word}' has been successfully removed from your vocabulary.`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+        });
     };
 
     return (
@@ -88,7 +95,7 @@ const VocabularyPage = ({ session }) => {
                         Are you sure you want to delete this word?
                     </AlertDialogBody>
                     <AlertDialogFooter>
-                        <Button ref={cancelRef} onClick={onCloseAlert}>
+                        <Button mr='4' ref={cancelRef} onClick={onCloseAlert}>
                             Cancel
                         </Button>
                         <Button colorScheme='red' onClick={onDeleteConfirm}>
@@ -151,11 +158,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             }
         }
     }
-
-    const docRef = doc(db, 'users', session.user.id);
-    const docSnap = await getDoc(docRef);
-
-    const vocabulary = docSnap.exists() && docSnap.data().vocabulary ? docSnap.data().vocabulary[Object.values(languageMap)[0] + 'Words'] : {};
 
     return {
         props: { session },
