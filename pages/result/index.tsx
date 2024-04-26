@@ -7,6 +7,7 @@ import { useTranslate } from "../../hooks/useTranslate";
 import { useRouter } from 'next/router';
 import { languageMap } from "../../utils/vocabulary/translation";
 import NavBar from "../../components/NavBar";
+import TextToSpeechBtn from '../../components/TextToSpeechBtn';
 import { useToast } from "@chakra-ui/react";
 
 export default function Result() {
@@ -80,7 +81,7 @@ export default function Result() {
         <>
             <NavBar />
             <VStack spacing={4} mt="20px">
-                <Button colorScheme="blue" onClick={() => router.push('/')}>Back to Home</Button>
+                <TextToSpeechBtn text={formData.text} language={languageMap[formData.language]}/>
                 <Box p={5} textAlign="justify" whiteSpace="pre-wrap">
                     {words.map((word: string, index: number) => {
                         const isWord = /\w+/.test(word);
