@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast } from "@chakra-ui/react";
-import { DeleteIcon, SearchIcon } from "@chakra-ui/icons";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast, useDisclosure } from "@chakra-ui/react";
+import { AddIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -16,8 +16,13 @@ const VocabularyPage = ({ session }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
+
     const cancelRef = useRef(); // For the cancel button focus
     const toast = useToast();
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const initialRef = useRef();
+    const finalRef = useRef();
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -30,20 +35,24 @@ const VocabularyPage = ({ session }) => {
                 setVocabulary([]); // Ensure vocabulary is set to an empty array if it doesn't exist
             }
         })();
-    }, [session, selectedLanguage])
+    }, [session, selectedLanguage]);
 
     const filteredVocabulary = useMemo(() => {
         return vocabulary.filter(entry => entry.word.includes(searchTerm));
-    }, [vocabulary, searchTerm])
+    }, [vocabulary, searchTerm]);
+
+    const handleAddWordSubmit = async (newWordData: entry) => {
+        console.log(`The word ${newWordData.word} has been successfully added to the vocabulary!`)
+    }
 
     const onOpenAlert = (index: number) => {
         setIndexToDelete(index);
         setIsAlertOpen(true);
-    }
+    };
 
     const onCloseAlert = () => {
         setIsAlertOpen(false);
-    }
+    };
 
     const onDeleteConfirm = async () => {
         const fieldPath = `vocabulary.${selectedLanguage}Words`;
@@ -82,9 +91,18 @@ const VocabularyPage = ({ session }) => {
                     </VStack>
                 </Box>
                 <Box width='80%' p={5}>
+                    <Flex justify='space-between' align='center' mb={4}>
                     <Heading mb={4}>
                         {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
                     </Heading>
+                    <Button
+                        leftIcon={<AddIcon />} 
+                        colorScheme='blue'
+                        onClick={() => handleAddWordSubmit({word: 'salut', translation: 'hi'})}
+                    >
+                        Add a Word
+                    </Button>
+                    </Flex>
                     <InputGroup mb={4}>
                         <InputLeftElement pointerEvents='none'>
                             <SearchIcon />
@@ -121,13 +139,13 @@ const VocabularyPage = ({ session }) => {
                 </AlertDialogContent>
             </AlertDialog>
         </>
-    )
-}
+    );
+};
 
 const VocabularyTable = ({ words, onDelete }) => {
     if(!words || words.length === 0) {
         return <Box>No words added yet.</Box>
-    }
+    };
 
     return (
         <Table variant='simple'>
@@ -158,7 +176,7 @@ const VocabularyTable = ({ words, onDelete }) => {
                 ))}
             </Tbody>
         </Table>
-    )
+    );
 };
 
 export default VocabularyPage;
@@ -172,8 +190,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
                 destination: '/',
                 permanent: false,
             }
-        }
-    }
+        };
+    };
 
     return {
         props: { session },
