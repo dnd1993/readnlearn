@@ -1,17 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, useToast } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast } from "@chakra-ui/react";
+import { DeleteIcon, SearchIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { languageMap } from "../../utils/vocabulary/translation";
 import { capitalizeFirstLetter } from "../../utils/vocabulary/capitalizeFirstLetter";
+import { entry } from "../../types/vocabulary";
 
 const VocabularyPage = ({ session }) => {
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
     const [vocabulary, setVocabulary] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
     const cancelRef = useRef(); // For the cancel button focus
@@ -29,6 +31,10 @@ const VocabularyPage = ({ session }) => {
             }
         })();
     }, [session, selectedLanguage])
+
+    const filteredVocabulary = useMemo(() => {
+        return vocabulary.filter(entry => entry.word.includes(searchTerm));
+    }, [vocabulary, searchTerm])
 
     const onOpenAlert = (index: number) => {
         setIndexToDelete(index);
@@ -79,7 +85,17 @@ const VocabularyPage = ({ session }) => {
                     <Heading mb={4}>
                         {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
                     </Heading>
-                    <VocabularyTable words={vocabulary} onDelete={onOpenAlert} />
+                    <InputGroup mb={4}>
+                        <InputLeftElement pointerEvents='none'>
+                            <SearchIcon />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="Search for a word in your vocabulary..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </InputGroup>
+                    <VocabularyTable words={filteredVocabulary} onDelete={onOpenAlert} />
                 </Box> 
             </Flex>
             <AlertDialog
@@ -124,7 +140,7 @@ const VocabularyTable = ({ words, onDelete }) => {
                 </Tr>
             </Thead>
             <Tbody>
-                {words.length > 0 && words.map((entry, index: number) => (
+                {words.length > 0 && words.map((entry: entry, index: number) => (
                     <Tr key={index}>
                         <Td>{entry.word}</Td>
                         <Td>{entry.translation}</Td>

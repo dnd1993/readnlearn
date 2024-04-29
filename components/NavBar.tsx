@@ -26,7 +26,7 @@ const NavBar = () => {
                       _hover={{ textDecoration: 'underline' }}
                       style={isActive('/input') ? activeLinkStyle : {}}
                     >
-                        Home
+                        Input
                     </Text>
                 </Link>
                 {session && (
