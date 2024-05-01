@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast, useDisclosure } from "@chakra-ui/react";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, useDisclosure, FormControl, FormLabel, FormErrorMessage} from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
@@ -9,6 +9,9 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { languageMap } from "../../utils/vocabulary/translation";
 import { capitalizeFirstLetter } from "../../utils/vocabulary/capitalizeFirstLetter";
 import { entry } from "../../types/vocabulary";
+import { useForm } from "react-hook-form";
+import { addToVocabulary } from "../../utils/vocabulary/addToVocabulary";
+
 
 const VocabularyPage = ({ session }) => {
     const [selectedLanguage, setSelectedLanguage] = useState(Object.values(languageMap)[0]);
@@ -17,12 +20,14 @@ const VocabularyPage = ({ session }) => {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
 
+    const { isOpen, onOpen, onClose } = useDisclosure()
+
     const cancelRef = useRef(); // For the cancel button focus
     const toast = useToast();
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const initialRef = useRef();
-    const finalRef = useRef();
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+
+    console.log(selectedLanguage);
 
     useEffect(() => {
         session && (async function fetchDoc() {
@@ -41,8 +46,16 @@ const VocabularyPage = ({ session }) => {
         return vocabulary.filter(entry => entry.word.includes(searchTerm));
     }, [vocabulary, searchTerm]);
 
-    const handleAddWordSubmit = async (newWordData: entry) => {
-        console.log(`The word ${newWordData.word} has been successfully added to the vocabulary!`)
+    const onAddWordSubmit = async (newWordData: entry) => {
+        console.log(`The word ${newWordData.word} has been successfully added to the vocabulary!`);
+        const newWord = {
+            word: newWordData.word,
+            translation: newWordData.translation
+        }
+        await addToVocabulary(session.user.id, selectedLanguage, newWord.word, newWord.translation, toast)
+        setVocabulary(prevVocabulary => [...prevVocabulary, newWord])
+        onClose();
+        reset();
     }
 
     const onOpenAlert = (index: number) => {
@@ -98,7 +111,7 @@ const VocabularyPage = ({ session }) => {
                     <Button
                         leftIcon={<AddIcon />} 
                         colorScheme='blue'
-                        onClick={() => handleAddWordSubmit({word: 'salut', translation: 'hi'})}
+                        onClick={onOpen}
                     >
                         Add a Word
                     </Button>
@@ -116,6 +129,55 @@ const VocabularyPage = ({ session }) => {
                     <VocabularyTable words={filteredVocabulary} onDelete={onOpenAlert} />
                 </Box> 
             </Flex>
+            <Modal 
+                isOpen={isOpen} 
+                onClose={onClose}
+            >
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Add a new word</ModalHeader>
+                    <ModalCloseButton />
+                    <form onSubmit={handleSubmit(onAddWordSubmit)}>
+                        <ModalBody pb={6}>
+                            <FormControl mt={2} isInvalid={!!errors.word}>
+                                <FormLabel>Word</FormLabel>
+                                <Input 
+                                    id='word'
+                                    placeholder='Enter a new word...'
+                                    {...register('word', { required: 'Please type in a word' })} 
+                                />
+                                {errors.word && <FormErrorMessage>{errors.word.message}</FormErrorMessage>}
+                            </FormControl>
+                            <FormControl isInvalid={!!errors.translation}>
+                                <FormLabel mt={4}>Translation</FormLabel>
+                                <Input 
+                                    id='word'
+                                    placeholder='Enter the translation...'
+                                    {...register('translation', { required: 'Please type in the translation' })} 
+                                />
+                               {errors.translation && <FormErrorMessage>{errors.translation.message}</FormErrorMessage>} 
+                            </FormControl>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button
+                                type='submit'
+                                isLoading={isSubmitting}
+                                colorScheme='blue'
+                                mr={4}
+                            >
+                                Add to vocabulary
+                            </Button>
+                            <Button 
+                                onClick={() => {
+                                    onClose();
+                                    reset();
+                            }}>
+                                Cancel
+                            </Button>
+                        </ModalFooter>
+                    </form>  
+                </ModalContent>                
+            </Modal>
             <AlertDialog
                 isOpen={isAlertOpen}
                 leastDestructiveRef={cancelRef}

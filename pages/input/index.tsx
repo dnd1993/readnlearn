@@ -16,7 +16,7 @@ export default function InputPage() {
   const { setFormData } = useFormData();
   const router = useRouter();
   
-  async function onSubmit(values: FormData) {
+  function onSubmit(values: FormData) {
     setFormData(values);
     router.push({
       pathname: '/result',

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { addToVocabulary } from "../../utils/vocabulary/addToVocabulary";
 import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
 import { useTranslate } from "../../hooks/useTranslate";
@@ -9,6 +8,7 @@ import { languageMap } from "../../utils/vocabulary/translation";
 import NavBar from "../../components/NavBar";
 import TextToSpeechBtn from '../../components/TextToSpeechBtn';
 import { useToast } from "@chakra-ui/react";
+import { addToVocabulary } from "../../utils/vocabulary/addToVocabulary";
 
 export default function Result() {
     const { data: session, status } = useSession({
@@ -26,9 +26,21 @@ export default function Result() {
     // Use a regex that captures words, spaces, and punctuation as separate groups
     const words = formData.text.match(/(\w+|\s+|[^\w\s]+)/g) || [];
 
+    const toast = useToast();
+
     const handleWordClick = async (word: string, index: number) => {
         setSelectedWordIndex(index);
         setSelectedWord(word);
+    }
+
+    const handleAddToVocabulary = async () => {
+        await addToVocabulary(
+            session.user.id,
+            languageMap[formData.language],
+            selectedWord,
+            translation.data.translations[0].translatedText,
+            toast
+        )
     }
 
     const { data: translation, isLoading } = useTranslate({
@@ -36,33 +48,6 @@ export default function Result() {
         sourceLang: languageMap[formData.language],
         targetLang: 'en',
     });
-
-    const handleAddToVocabulary = async () => {
-        if (translation?.data.translations[0].translatedText) {
-          try {
-            await addToVocabulary(session.user.id, languageMap[formData.language], selectedWord, translation.data.translations[0].translatedText);
-            // Show success toast
-            toast({
-              title: 'Word added.',
-              description: `"${selectedWord}" has been added to your vocabulary.`,
-              status: 'success',
-              duration: 5000,
-              isClosable: true,
-            });
-          } catch (error) {
-            // Show error toast if something goes wrong
-            toast({
-              title: 'Error.',
-              description: 'There was an error adding the word to your vocabulary.',
-              status: 'error',
-              duration: 5000,
-              isClosable: true,
-            });
-          }
-        }
-      };
-
-    const toast = useToast();
 
     if (!formData.text) {
         return (
