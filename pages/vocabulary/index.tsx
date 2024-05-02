@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, useDisclosure, FormControl, FormLabel, FormErrorMessage} from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
+import { Flex, Box, VStack, Link as ChakraLink, Table, Thead, Tbody, Tr, Th, Td, Heading, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, Button, InputGroup, InputLeftElement, Input, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, useDisclosure, FormControl, FormLabel, FormErrorMessage, Container, Text} from "@chakra-ui/react";
+import { AddIcon, ArrowBackIcon, ArrowForwardIcon, DeleteIcon, SearchIcon } from "@chakra-ui/icons";
 import NavBar from "../../components/NavBar";
 import { db } from "../../utils/firebase/config";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -19,31 +19,47 @@ const VocabularyPage = ({ session }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [indexToDelete, setIndexToDelete] = useState(null);
+    const [flashcardIndex, setFlashcardIndex] = useState(0);
+    const [isShowingCardFront, setIsShowingCardFront] = useState(false);
 
-    const { isOpen, onOpen, onClose } = useDisclosure()
+    const { isOpen: isAddWordModalOpen, onOpen: onOpenAddWordModal, onClose: onCloseAddWordModal } = useDisclosure();
+    const { isOpen: isFlashcardsOpen, onOpen: onOpenFlashcards, onClose: onCloseFlashcards } = useDisclosure();
 
     const cancelRef = useRef(); // For the cancel button focus
     const toast = useToast();
 
     const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
-    console.log(selectedLanguage);
-
     useEffect(() => {
-        session && (async function fetchDoc() {
-            const docRef = doc(db, 'users', session.user.id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().vocabulary) {
-                setVocabulary(docSnap.data().vocabulary[selectedLanguage + 'Words'])
-            } else {
-                console.log('No such document!');
-                setVocabulary([]); // Ensure vocabulary is set to an empty array if it doesn't exist
-            }
-        })();
+        if (session) {
+            const fetchDoc = async () => {
+                try {
+                    const docRef = doc(db, 'users', session.user.id);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const userVocabulary = docSnap.data().vocabulary;
+                        if (userVocabulary && userVocabulary[selectedLanguage + 'Words']) {
+                            setVocabulary(userVocabulary[selectedLanguage + 'Words']);
+                        } else {
+                            console.log('Vocabulary for the selected language does not exist, setting empty array.');
+                            setVocabulary([]);
+                        }
+                    } else {
+                        console.log('No document found, setting vocabulary to an empty array.');
+                        setVocabulary([]);
+                    }
+                } catch (error) {
+                    console.error('Error fetching document:', error);
+                    setVocabulary([]); // Set vocabulary to an empty array on error
+                }
+            };
+    
+            fetchDoc();
+        }
     }, [session, selectedLanguage]);
 
     const filteredVocabulary = useMemo(() => {
-        return vocabulary.filter(entry => entry.word.includes(searchTerm));
+        return vocabulary?.filter(entry => entry.word.includes(searchTerm));
     }, [vocabulary, searchTerm]);
 
     const onAddWordSubmit = async (newWordData: entry) => {
@@ -54,7 +70,7 @@ const VocabularyPage = ({ session }) => {
         }
         await addToVocabulary(session.user.id, selectedLanguage, newWord.word, newWord.translation, toast)
         setVocabulary(prevVocabulary => [...prevVocabulary, newWord])
-        onClose();
+        onCloseAddWordModal();
         reset();
     }
 
@@ -84,6 +100,24 @@ const VocabularyPage = ({ session }) => {
         });
     };
 
+    const handleToggleFlashcard = () => {
+        setIsShowingCardFront(!isShowingCardFront);
+    }
+
+    const goToNextFlashcard = () => {
+        if (flashcardIndex < vocabulary.length - 1) {
+            setFlashcardIndex(flashcardIndex + 1);
+            setIsShowingCardFront(true); // Reset to showing the front when moving to next card
+        }
+    }
+
+    const goToPreviousFlashcard = () => {
+        if (flashcardIndex > 0) {
+            setFlashcardIndex(flashcardIndex - 1);
+            setIsShowingCardFront(true);
+        }
+    };
+
     return (
         <>
             <NavBar />
@@ -105,17 +139,22 @@ const VocabularyPage = ({ session }) => {
                 </Box>
                 <Box width='80%' p={5}>
                     <Flex justify='space-between' align='center' mb={4}>
-                    <Heading mb={4}>
-                        {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
-                    </Heading>
-                    <Button
-                        leftIcon={<AddIcon />} 
-                        colorScheme='blue'
-                        onClick={onOpen}
-                    >
-                        Add a Word
-                    </Button>
+                        <Heading mb={4}>
+                            {capitalizeFirstLetter(Object.keys(languageMap).find(key => languageMap[key] === selectedLanguage))}
+                        </Heading>
+                        <Button
+                            leftIcon={<AddIcon />} 
+                            colorScheme='blue'
+                            onClick={onOpenAddWordModal}
+                        >
+                            Add a Word
+                        </Button>
                     </Flex>
+                    {vocabulary.length > 0 ? (
+                        <Button colorScheme='teal' onClick={onOpenFlashcards} mb={4}>Start Practising!</Button>
+                    ) : (
+                        <Text mt={4}>Add some words to start practicing.</Text>
+                    )}
                     <InputGroup mb={4}>
                         <InputLeftElement pointerEvents='none'>
                             <SearchIcon />
@@ -130,8 +169,8 @@ const VocabularyPage = ({ session }) => {
                 </Box> 
             </Flex>
             <Modal 
-                isOpen={isOpen} 
-                onClose={onClose}
+                isOpen={isAddWordModalOpen} 
+                onClose={onCloseAddWordModal}
             >
                 <ModalOverlay />
                 <ModalContent>
@@ -169,7 +208,7 @@ const VocabularyPage = ({ session }) => {
                             </Button>
                             <Button 
                                 onClick={() => {
-                                    onClose();
+                                    onCloseAddWordModal();
                                     reset();
                             }}>
                                 Cancel
@@ -178,6 +217,43 @@ const VocabularyPage = ({ session }) => {
                     </form>  
                 </ModalContent>                
             </Modal>
+            {vocabulary.length > 0 &&
+            <Modal isOpen={isFlashcardsOpen} onClose={onCloseFlashcards}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Flashcards</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Container onClick={handleToggleFlashcard} cursor='pointer'>
+                            <Text fontSize='2xl' p={5} textAlign='center' bg='gray.100' borderRadius='md'>
+                                {
+                                    isShowingCardFront
+                                        ? vocabulary[flashcardIndex]?.word
+                                        : vocabulary[flashcardIndex]?.translation
+                                }
+                            </Text>
+                        </Container>
+                        <Flex mt={4} justify='space-between'>
+                            <Button 
+                                onClick={goToPreviousFlashcard} 
+                                leftIcon={<ArrowBackIcon />} 
+                                isDisabled={flashcardIndex === 0}
+                            >
+                                Previous Word
+                            </Button>
+                            <Button
+                                onClick={goToNextFlashcard}
+                                rightIcon={<ArrowForwardIcon />}
+                                isDisabled={flashcardIndex === vocabulary.length - 1}
+                                mb={4}
+                            >
+                                Next Word
+                            </Button>        
+                        </Flex>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+}
             <AlertDialog
                 isOpen={isAlertOpen}
                 leastDestructiveRef={cancelRef}
