@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter } from "@chakra-ui/react";
+import { Box, Button, Popover, PopoverTrigger, PopoverContent, PopoverBody, Text, VStack, PopoverFooter, PopoverHeader } from "@chakra-ui/react";
 import { useFormData } from "../../context/FormDataContext";
 import { useTranslate } from "../../hooks/useTranslate";
 import { useRouter } from 'next/router';
@@ -85,6 +85,9 @@ export default function Result() {
                                             </Text>
                                         </PopoverTrigger>
                                         <PopoverContent>
+                                            <PopoverHeader fontWeight='bold'>
+                                                {word} <TextToSpeechBtn language={languageMap[formData.language]} text={word} />
+                                            </PopoverHeader>
                                             <PopoverBody>
                                             {isLoading ? "Loading translation..." : translation?.data.translations[0].translatedText || "Translation not available."}
                                             </PopoverBody>

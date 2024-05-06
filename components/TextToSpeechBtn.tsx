@@ -7,7 +7,7 @@ type TextToSpeechBtnProps = {
 }
 
 const TextToSpeechBtn = ({ text, language }: TextToSpeechBtnProps) => {
-    const playTextToSpeech = (textToSpeech: string) => {
+    const playTextToSpeech = (textToSpeech: string, language: string) => {
         const synth = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance(textToSpeech);
         utterance.lang = `${language}-${language.toUpperCase()}`;
@@ -17,7 +17,7 @@ const TextToSpeechBtn = ({ text, language }: TextToSpeechBtnProps) => {
         <Tooltip label='Click to hear the text' hasArrow placement='bottom'>
             <IconButton
                 icon={<MdVolumeUp />}
-                onClick={() => playTextToSpeech(text)}
+                onClick={() => playTextToSpeech(text, language)}
                 variant='ghost'
                 size='lg'
                 colorScheme='blue'
